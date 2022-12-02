@@ -1,4 +1,3 @@
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 
 import java.awt.*;
@@ -52,7 +51,7 @@ public class BookmarkExporter {
         String pageTitle = "";
         try {
             pageTitle = Jsoup.connect(link).userAgent("Mozilla").get().title();
-        } catch (HttpStatusException ignored) {
+        } catch (Exception e) {
             pageTitle = link;
         }
         System.out.println(pageTitle);
