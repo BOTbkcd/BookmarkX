@@ -30,7 +30,9 @@ public class BookmarkExporter {
             title = path.substring(path.lastIndexOf("/") + 1);
             path += ".html";
         }
-        Path savePath = Paths.get(path);
+	
+	String home = System.getProperty("user.home");
+        Path savePath = Path.of(home, path);
         Files.writeString(savePath, getBookmarkFile(title), StandardOpenOption.CREATE);
     }
 
@@ -73,8 +75,9 @@ public class BookmarkExporter {
 
     public static void main(String[] args) throws IOException, UnsupportedFlavorException, InterruptedException {
         Scanner input = new Scanner(System.in);
-        System.out.println("Enter File Path: ");
+        System.out.println("Enter file path relative to home directory: ");
         String path = input.nextLine();
+
 
         BookmarkExporter linkExporter = new BookmarkExporter();
         linkExporter.saveLinks(path);
