@@ -8,9 +8,11 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class BookmarkExporter {
     /**
@@ -33,17 +35,28 @@ public class BookmarkExporter {
 	
 	String home = System.getProperty("user.home");
         Path savePath = Path.of(home, path);
-        Files.writeString(savePath, getBookmarkFile(title), StandardOpenOption.CREATE);
+        Files.writeString(savePath, buildBookmarkFile(title), StandardOpenOption.CREATE);
     }
 
-    private StringBuilder getBookmarkFile(String Title) throws IOException, UnsupportedFlavorException, InterruptedException {
+    private StringBuilder buildBookmarkFile(String title) throws IOException, UnsupportedFlavorException, InterruptedException {
         String data = fetchClipboardData();
         String[] links = data.split("\n");
 
-        StringBuilder bookmarkText = new StringBuilder("<TITLE>" + Title + "</TITLE>\n" + "<DT><H3>" + Title + "</H3>\n<DL><p>\n");
+        StringBuilder bookmarkText = new StringBuilder("<TITLE>" + title + "</TITLE>\n" + "<DT><H3>" + title + "</H3>\n<DL><p>\n");
+
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
         for(String link: links) {
-            bookmarkText.append("\n").append(prepareLink(link));
+            Runnable task = () -> {
+                try {
+                    bookmarkText.append("\n").append(prepareLink(link));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+            executorService.execute(task);
         }
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
         bookmarkText.append("</DL><p>");
         return bookmarkText;
     }
